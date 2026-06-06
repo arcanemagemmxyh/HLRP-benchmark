@@ -1,0 +1,6 @@
+instance_name,source_prefix,n_nodes,cap_type,cost_type,q,alpha,assignment_weight,total_flow,min_hub_fixed_cost,max_hub_fixed_cost,min_hub_capacity,max_hub_capacity,json_path
+ap10_TT_q5,ap10,10,T,T,5,0.75,1.0,3259.41227,23791.913545,111090.410478,310.174103,2878.31801,Integration\data\TT\ap10_TT_q5.json
+ap20_TT_q5,ap20,20,T,T,5,0.75,1.0,3557.64919,23067.471321,212142.351474,21.256376,2183.73219,Integration\data\TT\ap20_TT_q5.json
+ap25_TT_q5,ap25,25,T,T,5,0.75,1.0,3643.3436300000003,24427.232098,275609.769717,17.967505,1909.237468,Integration\data\TT\ap25_TT_q5.json
+ap40_TT_q5,ap40,40,T,T,5,0.75,1.0,3754.31743,23188.981059,470630.285463,14.497634,1645.75751,Integration\data\TT\ap40_TT_q5.json
+ap50_TT_q5,ap50,50,T,T,5,0.75,1.0,3785.6514500000003,23641.474114,710415.562073,14.067214,1596.896623,Integration\data\TT\ap50_TT_q5.json
