@@ -31,7 +31,7 @@ for path in (GENERATOR, EVALUATOR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from generate_unified_hlrp_dataset import build_unified_instance, read_instance  # noqa: E402
+from generate_unified_hlrp_dataset import build_unified_instance, normalize_type, read_instance, setting_label  # noqa: E402
 from hlrp_instance import HLRPInstance  # noqa: E402
 
 
@@ -344,10 +344,13 @@ def write_unified(
     assignment_weight: float,
     vehicle_fixed_cost: float,
 ) -> Path:
-    setting = setting.upper()
-    if setting not in {"LL", "TT"}:
-        raise ValueError("This script currently prepares LL or TT settings.")
-    cost_type, cap_type = setting[0], setting[1]
+    token = str(setting).strip()
+    legacy = token.lower()
+    if legacy in {"ll", "tt"}:
+        cost_type, cap_type = legacy[0].upper(), legacy[1].upper()
+    else:
+        cost_type = cap_type = normalize_type(token)
+    setting = setting_label(cost_type, cap_type)
     raw = read_instance(stage_dir, prefix)
     unified = build_unified_instance(
         raw=raw,
@@ -398,7 +401,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--stage_dir", type=Path, default=ROOT / "scratch" / "stage_cross_topology")
     parser.add_argument("--out_dir", type=Path, default=ROOT / "data" / "cross_source")
     parser.add_argument("--prefixes", type=str, default="ap10,cab10,tr10")
-    parser.add_argument("--settings", type=str, default="LL,TT")
+    parser.add_argument("--settings", type=str, default="loose,tight")
     parser.add_argument("--q", type=int, default=5)
     parser.add_argument("--alpha", type=float, default=0.75)
     parser.add_argument("--assignment_weight", type=float, default=1.0)
@@ -410,7 +413,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     prefixes = [x.strip() for x in args.prefixes.split(",") if x.strip()]
-    settings = [x.strip().upper() for x in args.settings.split(",") if x.strip()]
+    settings = [x.strip() for x in args.settings.split(",") if x.strip()]
     rows: List[Dict] = []
 
     for prefix in prefixes:
@@ -464,7 +467,7 @@ def main() -> None:
             rows.append({
                 "instance_name": data["instance_name"],
                 "source_prefix": data["source_prefix"],
-                "setting": setting,
+                "setting": data.get("parameters", {}).get("setting", setting),
                 "n_nodes": data["summary"]["n_nodes"],
                 "q": data["parameters"]["q"],
                 "alpha": data["parameters"]["alpha"],

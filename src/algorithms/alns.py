@@ -16,7 +16,7 @@ Main benchmark assumptions
 - hub fixed cost + local routing cost + assignment cost + inter-hub cost + vehicle fixed cost
 
 Usage example
-python src/algorithms/alns.py --instance_json data/main_core/LL/ap20_LL_q5.json --time_limit 60 --seed 11 --out scratch/ap20_LL_alns.json
+python src/algorithms/alns.py --instance_json data/main_core/loose/ap20_loose_q5.json --time_limit 60 --seed 11 --out scratch/ap20_loose_alns.json
 """
 
 from __future__ import annotations

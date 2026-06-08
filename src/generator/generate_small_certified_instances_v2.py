@@ -3,7 +3,7 @@
 
 Default grid:
     scale  : ap10, ap15
-    regime : LL, TT
+    setting: loose, tight
     q      : 3, 4, 5
     alpha  : 0.2, 0.3, ..., 0.9
 
@@ -11,7 +11,7 @@ Total: 2 x 2 x 3 x 8 = 96 instances.
 
 ap15 is constructed as a deterministic AP-derived subset: the first 15 nodes of
 ap20, together with the corresponding first 15 cost/capacity entries. This keeps
-all AP-derived instances reproducible while adding a denser small-certified tier.
+all AP-derived instances reproducible while adding a denser small certified grid.
 """
 
 from __future__ import annotations
@@ -29,10 +29,10 @@ for path in (GENERATOR, ROOT):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from generate_unified_hlrp_dataset import build_unified_instance, read_instance
+from generate_unified_hlrp_dataset import build_unified_instance, normalize_type, read_instance, setting_label
 
 DEFAULT_SCALES = ("ap10", "ap15")
-DEFAULT_REGIMES = ("LL", "TT")
+DEFAULT_SETTINGS = ("loose", "tight")
 DEFAULT_Q_VALUES = (3, 4, 5)
 DEFAULT_ALPHAS = tuple(round(0.1 * i, 1) for i in range(2, 10))
 
@@ -85,19 +85,19 @@ def load_scale(data_dir: Path, scale: str) -> Dict:
     return read_instance(data_dir, scale)
 
 
-def iter_grid(scales: Sequence[str], regimes: Sequence[str], q_values: Sequence[int], alphas: Sequence[float]) -> Iterable[tuple[str, str, int, float]]:
+def iter_grid(scales: Sequence[str], settings: Sequence[str], q_values: Sequence[int], alphas: Sequence[float]) -> Iterable[tuple[str, str, int, float]]:
     for scale in scales:
-        for regime in regimes:
+        for setting in settings:
             for q in q_values:
                 for alpha in alphas:
-                    yield scale, regime, int(q), float(alpha)
+                    yield scale, setting, int(q), float(alpha)
 
 
 def write_manifest(rows: List[Dict], manifest_path: Path) -> None:
     fields = [
         "instance_name",
         "scale",
-        "regime",
+        "setting",
         "q",
         "alpha",
         "alpha_tag",
@@ -121,7 +121,7 @@ def main() -> None:
     parser.add_argument("--data_dir", type=str, default="data/source_ap", help="Directory containing AP-derived source files.")
     parser.add_argument("--out_dir", type=str, default="data/small_certified", help="Output directory for generated JSON instances.")
     parser.add_argument("--scales", nargs="+", default=list(DEFAULT_SCALES), help="Scale names, e.g., ap10 ap15.")
-    parser.add_argument("--regimes", nargs="+", default=list(DEFAULT_REGIMES), help="Regimes, e.g., LL TT.")
+    parser.add_argument("--settings", nargs="+", default=list(DEFAULT_SETTINGS), help="Settings, e.g., loose tight.")
     parser.add_argument("--q_values", nargs="+", type=int, default=list(DEFAULT_Q_VALUES), help="Route-size limits.")
     parser.add_argument("--alphas", nargs="+", default=["default"], help="Alpha values. Use default for 0.2,...,0.9.")
     parser.add_argument("--vehicle_fixed_cost", type=float, default=0.0)
@@ -138,11 +138,14 @@ def main() -> None:
     raw_cache = {scale: load_scale(data_dir, scale) for scale in args.scales}
     rows: List[Dict] = []
 
-    for scale, regime, q, alpha in iter_grid(args.scales, args.regimes, args.q_values, alphas):
-        if len(regime) != 2 or regime[0] not in {"L", "T"} or regime[1] not in {"L", "T"}:
-            raise ValueError(f"Invalid regime: {regime}. Expected one of LL, LT, TL, TT.")
-        cost_type = regime[0]
-        cap_type = regime[1]
+    for scale, setting_arg, q, alpha in iter_grid(args.scales, args.settings, args.q_values, alphas):
+        token = str(setting_arg).strip()
+        legacy = token.lower()
+        if legacy in {"ll", "tt"}:
+            cost_type, cap_type = legacy[0].upper(), legacy[1].upper()
+        else:
+            cost_type = cap_type = normalize_type(token)
+        setting = setting_label(cost_type, cap_type)
         raw = raw_cache[scale]
         inst = build_unified_instance(
             raw=raw,
@@ -156,14 +159,14 @@ def main() -> None:
         )
 
         tag = alpha_tag(alpha)
-        instance_name = f"{scale}_{regime}_q{q}_{tag}"
+        instance_name = f"{scale}_{setting}_q{q}_{tag}"
         inst["instance_name"] = instance_name
         inst["source_prefix"] = scale
         inst.setdefault("parameters", {})["alpha_tag"] = tag
-        inst.setdefault("parameters", {})["small_certified_grid"] = "ap10/ap15 x LL/TT x q=3/4/5 x alpha=0.2,...,0.9"
+        inst.setdefault("parameters", {})["small_certified_grid"] = "ap10/ap15 x loose/tight x q=3/4/5 x alpha=0.2,...,0.9"
         inst["small_certified"] = {
             "scale": scale,
-            "regime": regime,
+            "setting": setting,
             "q": q,
             "alpha": alpha,
             "alpha_tag": tag,
@@ -172,9 +175,9 @@ def main() -> None:
             "ap15_construction": "first 15 nodes of ap20" if scale == "ap15" else None,
         }
 
-        regime_dir = out_dir / regime
-        regime_dir.mkdir(parents=True, exist_ok=True)
-        out_path = regime_dir / f"{instance_name}.json"
+        setting_dir = out_dir / setting
+        setting_dir.mkdir(parents=True, exist_ok=True)
+        out_path = setting_dir / f"{instance_name}.json"
         if out_path.exists() and not args.overwrite:
             print(f"[SKIP] {instance_name} already exists")
         else:
@@ -186,7 +189,7 @@ def main() -> None:
         rows.append({
             "instance_name": instance_name,
             "scale": scale,
-            "regime": regime,
+            "setting": setting,
             "q": q,
             "alpha": alpha,
             "alpha_tag": tag,

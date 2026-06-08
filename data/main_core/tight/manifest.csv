@@ -1,0 +1,6 @@
+instance_name,source_prefix,n_nodes,cap_type,cost_type,q,alpha,assignment_weight,total_flow,min_hub_fixed_cost,max_hub_fixed_cost,min_hub_capacity,max_hub_capacity,json_path
+ap10_tight_q5,ap10,10,tight,tight,5,0.75,1.0,3259.41227,23791.913545,111090.410478,310.174103,2878.31801,Integration\data\tight\ap10_tight_q5.json
+ap20_tight_q5,ap20,20,tight,tight,5,0.75,1.0,3557.64919,23067.471321,212142.351474,21.256376,2183.73219,Integration\data\tight\ap20_tight_q5.json
+ap25_tight_q5,ap25,25,tight,tight,5,0.75,1.0,3643.3436300000003,24427.232098,275609.769717,17.967505,1909.237468,Integration\data\tight\ap25_tight_q5.json
+ap40_tight_q5,ap40,40,tight,tight,5,0.75,1.0,3754.31743,23188.981059,470630.285463,14.497634,1645.75751,Integration\data\tight\ap40_tight_q5.json
+ap50_tight_q5,ap50,50,tight,tight,5,0.75,1.0,3785.6514500000003,23641.474114,710415.562073,14.067214,1596.896623,Integration\data\tight\ap50_tight_q5.json

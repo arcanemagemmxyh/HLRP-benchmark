@@ -32,6 +32,29 @@ import numpy as np
 import pandas as pd
 
 
+def normalize_type(value: str) -> str:
+    token = str(value).strip()
+    low = token.lower()
+    if low == "loose":
+        return "L"
+    if low == "tight":
+        return "T"
+    token = token.upper()
+    if token in {"L", "T"}:
+        return token
+    raise ValueError("type must be L/T or loose/tight")
+
+
+def setting_label(cost_type: str, cap_type: str) -> str:
+    cost = normalize_type(cost_type)
+    cap = normalize_type(cap_type)
+    if cost == "L" and cap == "L":
+        return "loose"
+    if cost == "T" and cap == "T":
+        return "tight"
+    return f"{cost}{cap}"
+
+
 def load_edge_matrix(path: Path, value_col: str) -> np.ndarray:
     df = pd.read_csv(path)
     required = {"fromnode", "tonode", value_col}
@@ -109,12 +132,8 @@ def build_unified_instance(
     keep_diag_flow: bool,
     assignment_weight: float,
 ) -> Dict:
-    cap_type = cap_type.upper()
-    cost_type = cost_type.upper()
-    if cap_type not in {"L", "T"}:
-        raise ValueError("cap_type must be L or T")
-    if cost_type not in {"L", "T"}:
-        raise ValueError("cost_type must be L or T")
+    cap_type = normalize_type(cap_type)
+    cost_type = normalize_type(cost_type)
 
     n = raw["n"]
     nodes = raw["nodes"]
@@ -163,7 +182,8 @@ def build_unified_instance(
             if abs(W[i, j]) > 1e-12:
                 flow_edges.append({"from": i, "to": j, "flow": float(W[i, j])})
 
-    instance_name = f"{raw['prefix']}_{cost_type}{cap_type}_q{q}"
+    setting = setting_label(cost_type, cap_type)
+    instance_name = f"{raw['prefix']}_{setting}_q{q}"
     out = {
         "instance_name": instance_name,
         "source_prefix": raw["prefix"],
@@ -188,8 +208,11 @@ def build_unified_instance(
         },
         "parameters": {
             "alpha": float(alpha),
-            "cap_type": cap_type,
-            "cost_type": cost_type,
+            "setting": setting,
+            "cap_type": "loose" if cap_type == "L" else "tight",
+            "cost_type": "loose" if cost_type == "L" else "tight",
+            "source_cap_code": cap_type,
+            "source_cost_code": cost_type,
             "q": int(q),
             "vehicle_fixed_cost": float(vehicle_fixed_cost),
             "keep_diag_flow": bool(keep_diag_flow),
@@ -232,7 +255,7 @@ def build_unified_instance(
 def write_manifest(rows: List[Dict], out_csv: Path) -> None:
     out_csv.parent.mkdir(parents=True, exist_ok=True)
     cols = [
-        "instance_name", "source_prefix", "n_nodes", "cap_type", "cost_type", "q", "alpha",
+        "instance_name", "source_prefix", "n_nodes", "setting", "cap_type", "cost_type", "q", "alpha",
         "assignment_weight", "total_flow", "min_hub_fixed_cost", "max_hub_fixed_cost",
         "min_hub_capacity", "max_hub_capacity", "json_path"
     ]
@@ -248,8 +271,8 @@ def main() -> None:
     parser.add_argument("--data_dir", type=str, required=True, help="Input folder containing AP-derived CSV files")
     parser.add_argument("--out_dir", type=str, required=True, help="Output folder, e.g. ./TS/UnifiedData")
     parser.add_argument("--prefixes", type=str, default="", help="Comma-separated prefixes, e.g. ap10,ap20,ap25. Leave empty to auto-detect.")
-    parser.add_argument("--cap_type", type=str, default="L", choices=["L", "T", "l", "t"], help="Hub capacity type")
-    parser.add_argument("--cost_type", type=str, default="L", choices=["L", "T", "l", "t"], help="Hub fixed-cost type")
+    parser.add_argument("--cap_type", type=str, default="loose", choices=["L", "T", "l", "t", "loose", "tight"], help="Hub capacity setting")
+    parser.add_argument("--cost_type", type=str, default="loose", choices=["L", "T", "l", "t", "loose", "tight"], help="Hub fixed-cost setting")
     parser.add_argument("--alpha", type=float, default=0.75, help="Inter-hub discount used by the unified benchmark")
     parser.add_argument("--q", type=int, default=5, help="Max customers per local route")
     parser.add_argument("--vehicle_fixed_cost", type=float, default=0.0, help="Vehicle fixed cost to store in benchmark metadata")
@@ -293,6 +316,7 @@ def main() -> None:
             "instance_name": unified["instance_name"],
             "source_prefix": unified["source_prefix"],
             "n_nodes": summary["n_nodes"],
+            "setting": unified["parameters"]["setting"],
             "cap_type": unified["parameters"]["cap_type"],
             "cost_type": unified["parameters"]["cost_type"],
             "q": unified["parameters"]["q"],

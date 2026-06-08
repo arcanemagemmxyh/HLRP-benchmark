@@ -353,9 +353,9 @@ def initial_state(inst: HLRPInstance, max_open: int, rng: random.Random) -> Stat
 
 
 def infer_default_max_open(inst: HLRPInstance, instance_json: str = '') -> int:
-    name = str(getattr(inst, 'instance_name', '')).upper()
-    src = str(instance_json).upper()
-    if '_TT' in name or '/TT/' in src or '\\TT\\' in src or src.endswith('TT'):
+    name = str(getattr(inst, 'instance_name', '')).lower()
+    src = str(instance_json).lower()
+    if '_tight' in name or '/tight/' in src or '\\tight\\' in src or name.endswith('tight') or '_tt' in name or '/tt/' in src or '\\tt\\' in src or src.endswith('tt'):
         return min(inst.n, 6)
     return max(2, min(inst.n, max(4, int(round(math.sqrt(inst.n))))))
 

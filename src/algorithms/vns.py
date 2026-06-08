@@ -12,7 +12,7 @@ integration comparison:
 - hub fixed cost + assignment cost + inter-hub cost + local route cost
 
 Usage example
-python src/algorithms/vns.py --instance_json data/main_core/LL/ap20_LL_q5.json --time_limit 60 --seed 11 --out scratch/ap20_LL_vns.json
+python src/algorithms/vns.py --instance_json data/main_core/loose/ap20_loose_q5.json --time_limit 60 --seed 11 --out scratch/ap20_loose_vns.json
 """
 
 from __future__ import annotations
@@ -799,10 +799,14 @@ def solution_to_dict(sol: VNSSolution) -> Dict[str, object]:
 
 
 def infer_dataset_type(instance_name: str) -> Optional[str]:
-    parts = str(instance_name).split("_")
+    parts = str(instance_name).lower().split("_")
     for token in parts:
-        if token in {"LL", "TT"}:
+        if token in {"loose", "tight"}:
             return token
+        if token == "ll":
+            return "loose"
+        if token == "tt":
+            return "tight"
     return None
 
 

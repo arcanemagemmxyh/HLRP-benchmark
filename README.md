@@ -42,19 +42,19 @@ compact MIP model additionally requires IBM ILOG CPLEX and the Python packages
 Evaluate one benchmark instance:
 
 ```bash
-python src/evaluator/hlrp_instance.py --instance data/main_core/LL/ap10_LL_q5.json
+python src/evaluator/hlrp_instance.py --instance data/main_core/loose/ap10_loose_q5.json
 ```
 
 Run one ALNS smoke test:
 
 ```bash
-python src/algorithms/alns.py --instance_json data/main_core/LL/ap10_LL_q5.json --time_limit 5 --seed 11 --out scratch/ap10_LL_alns.json
+python src/algorithms/alns.py --instance_json data/main_core/loose/ap10_loose_q5.json --time_limit 5 --seed 11 --out scratch/ap10_loose_alns.json
 ```
 
 Run the compact MIP when CPLEX is available:
 
 ```bash
-python src/exact/compact_mip.py --instance_json data/main_core/LL/ap10_LL_q5.json --time_limit 600 --mip_gap 1e-9 --out_json scratch/ap10_LL_mip.json
+python src/exact/compact_mip.py --instance_json data/main_core/loose/ap10_loose_q5.json --time_limit 600 --mip_gap 1e-9 --out_json scratch/ap10_loose_mip.json
 ```
 
 ## Result Summary
