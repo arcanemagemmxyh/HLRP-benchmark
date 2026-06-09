@@ -61,6 +61,8 @@ python src/exact/compact_mip.py --instance_json data/main_core/loose/ap10_loose_
 
 The `results/` directory contains one consolidated long-format table,
 `summary_results.csv`, with four fields: `result_table`, `result_row`, `field`,
-and `value`. The `result_table` field records the source summary represented by
-each row group, so the numerical values reported in the manuscript can be
-checked without retaining exploratory logs or run-level JSON records.
+and `value`. It covers the exact certification summaries, 20-node CPLEX boundary
+records, certified heuristic validation, AP/CAB/TR anytime summaries,
+Wilcoxon tests, seed variability, 100-node scalability summaries, and the main
+diagnostic tables used in the manuscript. Exploratory logs and run-level JSON
+records are intentionally excluded from the release.
